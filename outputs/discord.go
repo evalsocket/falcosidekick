@@ -3,7 +3,7 @@ package outputs
 import (
 	"fmt"
 	"github.com/falcosecurity/falcosidekick/types"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 type discordPayload struct {
@@ -98,7 +98,7 @@ func (c *Client) DiscordPost(falcopayload types.FalcoPayload) {
 		go c.CountMetric(Outputs, 1, []string{"output:discord", "status:error"})
 		c.Stats.Discord.Add(Error, 1)
 		c.PromStats.Outputs.With(map[string]string{"destination": "discord", "status": Error}).Inc()
-		log.Printf("[ERROR] : Discord - %v\n", err)
+		log.Info("[ERROR] : Discord - %v\n", err)
 		return
 	}
 
@@ -106,5 +106,5 @@ func (c *Client) DiscordPost(falcopayload types.FalcoPayload) {
 	go c.CountMetric(Outputs, 1, []string{"output:discord", "status:ok"})
 	c.Stats.Discord.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "discord", "status": OK}).Inc()
-	log.Printf("[INFO] : Discord - Publish OK\n")
+	log.Info("[INFO] : Discord - Publish OK\n")
 }

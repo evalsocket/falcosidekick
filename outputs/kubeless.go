@@ -3,7 +3,7 @@ package outputs
 import (
 	"context"
 	"encoding/json"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"strconv"
 
 	"github.com/DataDog/datadog-go/statsd"
@@ -64,21 +64,21 @@ func (c *Client) KubelessCall(falcopayload types.FalcoPayload) {
 			go c.CountMetric(Outputs, 1, []string{"output:kubeless", "status:error"})
 			c.Stats.Kubeless.Add(Error, 1)
 			c.PromStats.Outputs.With(map[string]string{"destination": "kubeless", "status": Error}).Inc()
-			log.Printf("[ERROR] : Kubeless - %v\n", err)
+			log.Info("[ERROR] : Kubeless - %v\n", err)
 			return
 		}
-		log.Printf("[INFO]  : Kubeless - Function Response : %v\n", string(rawbody))
+		log.Info("[INFO]  : Kubeless - Function Response : %v\n", string(rawbody))
 	} else {
 		err := c.Post(falcopayload)
 		if err != nil {
 			go c.CountMetric(Outputs, 1, []string{"output:kubeless", "status:error"})
 			c.Stats.Kubeless.Add(Error, 1)
 			c.PromStats.Outputs.With(map[string]string{"destination": "kubeless", "status": Error}).Inc()
-			log.Printf("[ERROR] : Kubeless - %v\n", err)
+			log.Info("[ERROR] : Kubeless - %v\n", err)
 			return
 		}
 	}
-	log.Printf("[INFO]  : Kubeless - Call Function \"%v\" OK\n", c.Config.Kubeless.Function)
+	log.Info("[INFO]  : Kubeless - Call Function \"%v\" OK\n", c.Config.Kubeless.Function)
 	go c.CountMetric(Outputs, 1, []string{"output:kubeless", "status:ok"})
 	c.Stats.Kubeless.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "kubeless", "status": OK}).Inc()

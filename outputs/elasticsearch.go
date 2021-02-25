@@ -1,7 +1,7 @@
 package outputs
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/url"
 	"time"
 
@@ -28,7 +28,7 @@ func (c *Client) ElasticsearchPost(falcopayload types.FalcoPayload) {
 	endpointURL, err := url.Parse(eURL)
 	if err != nil {
 		c.setElasticSearchErrorMetrics()
-		log.Printf("[ERROR] : %v - %v\n", c.OutputType, err.Error())
+		log.Info("[ERROR] : %v - %v\n", c.OutputType, err.Error())
 		return
 	}
 
@@ -36,7 +36,7 @@ func (c *Client) ElasticsearchPost(falcopayload types.FalcoPayload) {
 	err = c.Post(falcopayload)
 	if err != nil {
 		c.setElasticSearchErrorMetrics()
-		log.Printf("[ERROR] : ElasticSearch - %v\n", err)
+		log.Info("[ERROR] : ElasticSearch - %v\n", err)
 		return
 	}
 
@@ -44,7 +44,7 @@ func (c *Client) ElasticsearchPost(falcopayload types.FalcoPayload) {
 	go c.CountMetric(Outputs, 1, []string{"output:elasticsearch", "status:ok"})
 	c.Stats.Elasticsearch.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "elasticsearch", "status": OK}).Inc()
-	log.Printf("[INFO]  : ElasticSearch - Publish OK\n")
+	log.Info("[INFO]  : ElasticSearch - Publish OK\n")
 }
 
 // setElasticSearchErrorMetrics set the error stats

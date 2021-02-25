@@ -1,7 +1,7 @@
 package outputs
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/falcosecurity/falcosidekick/types"
 )
@@ -15,7 +15,7 @@ func (c *Client) WebhookPost(falcopayload types.FalcoPayload) {
 		go c.CountMetric(Outputs, 1, []string{"output:webhook", "status:error"})
 		c.Stats.Webhook.Add(Error, 1)
 		c.PromStats.Outputs.With(map[string]string{"destination": "webhook", "status": Error}).Inc()
-		log.Printf("[ERROR] : WebHook - %v\n", err.Error())
+		log.Info("[ERROR] : WebHook - %v\n", err.Error())
 		return
 	}
 
@@ -23,5 +23,5 @@ func (c *Client) WebhookPost(falcopayload types.FalcoPayload) {
 	go c.CountMetric(Outputs, 1, []string{"output:webhook", "status:ok"})
 	c.Stats.Webhook.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "webhook", "status": OK}).Inc()
-	log.Printf("[INFO] : WebHook - Publish OK\n")
+	log.Info("[INFO] : WebHook - Publish OK\n")
 }

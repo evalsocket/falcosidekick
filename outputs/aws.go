@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/url"
 	"os"
 	"time"
@@ -30,7 +30,7 @@ func NewAWSClient(config *types.Configuration, stats *types.Statistics, promStat
 		err2 := os.Setenv("AWS_SECRET_ACCESS_KEY", config.AWS.SecretAccessKey)
 		err3 := os.Setenv("AWS_DEFAULT_REGION", config.AWS.Region)
 		if err1 != nil || err2 != nil || err3 != nil {
-			log.Printf("[ERROR] : AWS - Error setting AWS env vars")
+			log.Info("AWS - Error setting AWS env vars")
 			return nil, errors.New("Error setting AWS env vars")
 		}
 	}
@@ -39,20 +39,20 @@ func NewAWSClient(config *types.Configuration, stats *types.Statistics, promStat
 		Region: aws.String(config.AWS.Region)},
 	)
 	if err != nil {
-		log.Printf("[ERROR] : AWS - %v\n", "Error while creating AWS Session")
+		log.Error("AWS Error ", "err", "Error while creating AWS Session")
 		return nil, errors.New("Error while creating AWS Session")
 	}
 
 	_, err = sts.New(session.New()).GetCallerIdentity(&sts.GetCallerIdentityInput{})
 	if err != nil {
-		log.Printf("[ERROR] : AWS - %v\n", "Error while getting AWS Token")
+		log.Error("AWS Error ", "err", "Error while getting AWS Token")
 		return nil, errors.New("Error while getting AWS Token")
 	}
 
 	var endpointURL *url.URL
 	endpointURL, err = url.Parse(config.AWS.SQS.URL)
 	if err != nil {
-		log.Printf("[ERROR] : AWS SQS - %v\n", err.Error())
+		log.Error("AWS SQS ", "err", err.Error())
 		return nil, ErrClientCreation
 	}
 
@@ -88,16 +88,16 @@ func (c *Client) InvokeLambda(falcopayload types.FalcoPayload) {
 		go c.CountMetric("outputs", 1, []string{"output:awslambda", "status:error"})
 		c.Stats.AWSLambda.Add(Error, 1)
 		c.PromStats.Outputs.With(map[string]string{"destination": "awslambda", "status": Error}).Inc()
-		log.Printf("[ERROR] : %v Lambda - %v\n", c.OutputType, err.Error())
+		log.Error("Lambda", "output", c.OutputType, "err", err.Error())
 		return
 	}
 
 	if c.Config.Debug == true {
 		r, _ := base64.StdEncoding.DecodeString(*resp.LogResult)
-		log.Printf("[DEBUG] : %v Lambda result : %v\n", c.OutputType, string(r))
+		log.Debug("Lambda result", "output", c.OutputType, "result", string(r))
 	}
 
-	log.Printf("[INFO]  : %v Lambda - Invoke OK (%v)\n", c.OutputType, *resp.StatusCode)
+	log.Info("Lambda - Invoke OK ", "output", c.OutputType, "code", *resp.StatusCode)
 	go c.CountMetric("outputs", 1, []string{"output:awslambda", "status:ok"})
 	c.Stats.AWSLambda.Add("ok", 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "awslambda", "status": "ok"}).Inc()
@@ -121,15 +121,15 @@ func (c *Client) SendMessage(falcopayload types.FalcoPayload) {
 		go c.CountMetric("outputs", 1, []string{"output:awssqs", "status:error"})
 		c.Stats.AWSSQS.Add(Error, 1)
 		c.PromStats.Outputs.With(map[string]string{"destination": "awssqs", "status": Error}).Inc()
-		log.Printf("[ERROR] : %v SQS - %v\n", c.OutputType, err.Error())
+		log.Error("SQS ", "output", c.OutputType, "err", err.Error())
 		return
 	}
 
 	if c.Config.Debug == true {
-		log.Printf("[DEBUG] : %v SQS - MD5OfMessageBody : %v\n", c.OutputType, *resp.MD5OfMessageBody)
+		log.Debug("SQS - MD5OfMessageBody ", "output", c.OutputType, "body", *resp.MD5OfMessageBody)
 	}
 
-	log.Printf("[INFO]  : %v SQS - Send Message OK (%v)\n", c.OutputType, *resp.MessageId)
+	log.Info("SQS - Send Message OK", "output", c.OutputType, "body", *resp.MessageId)
 	go c.CountMetric("outputs", 1, []string{"output:awssqs", "status:ok"})
 	c.Stats.AWSSQS.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "awssqs", "status": "ok"}).Inc()
@@ -178,7 +178,7 @@ func (c *Client) PublishTopic(falcopayload types.FalcoPayload) {
 
 	if c.Config.Debug == true {
 		p, _ := json.Marshal(msg)
-		log.Printf("[DEBUG] : %v SNS - Message : %v\n", c.OutputType, string(p))
+		log.Debug("SNS - Message ", "output", c.OutputType, "body", string(p))
 	}
 
 	c.Stats.AWSSNS.Add("total", 1)
@@ -187,11 +187,11 @@ func (c *Client) PublishTopic(falcopayload types.FalcoPayload) {
 		go c.CountMetric("outputs", 1, []string{"output:awssns", "status:error"})
 		c.Stats.AWSSNS.Add(Error, 1)
 		c.PromStats.Outputs.With(map[string]string{"destination": "awssns", "status": Error}).Inc()
-		log.Printf("[ERROR] : %v - %v\n", c.OutputType, err.Error())
+		log.Error("", "output", c.OutputType, "err", err.Error())
 		return
 	}
 
-	log.Printf("[INFO]  : %v SNS - Send to topic OK (%v)\n", c.OutputType, *resp.MessageId)
+	log.Info("[INFO]  : %v SNS - Send to topic OK (%v)\n", c.OutputType, *resp.MessageId)
 	go c.CountMetric("outputs", 1, []string{"output:awssns", "status:ok"})
 	c.Stats.AWSSNS.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "awssns", "status": OK}).Inc()
@@ -207,7 +207,7 @@ func (c *Client) SendCloudWatchLog(falcopayload types.FalcoPayload) {
 
 	if c.Config.AWS.CloudWatchLogs.LogStream == "" {
 		streamName := "falcosidekick-logstream"
-		log.Printf("[INFO]  : %v CloudWatchLogs - Log Stream not configured creating one called %s\n", c.OutputType, streamName)
+		log.Info("CloudWatchLogs - Log Stream not configured creating one called", "output", c.OutputType, "name", streamName)
 		inputLogStream := &cloudwatchlogs.CreateLogStreamInput{
 			LogGroupName:  aws.String(c.Config.AWS.CloudWatchLogs.LogGroup),
 			LogStreamName: aws.String(streamName),
@@ -216,12 +216,12 @@ func (c *Client) SendCloudWatchLog(falcopayload types.FalcoPayload) {
 		_, err := svc.CreateLogStream(inputLogStream)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == cloudwatchlogs.ErrCodeResourceAlreadyExistsException {
-				log.Printf("[INFO]  : %v CloudWatchLogs - Log Stream %s already exist, reusing...\n", c.OutputType, streamName)
+				log.Info("[INFO]  : %v CloudWatchLogs - Log Stream %s already exist, reusing...\n", c.OutputType, streamName)
 			} else {
 				go c.CountMetric("outputs", 1, []string{"output:awscloudwatchlogs", "status:error"})
 				c.Stats.AWSCloudWatchLogs.Add(Error, 1)
 				c.PromStats.Outputs.With(map[string]string{"destination": "awscloudwatchlogs", "status": Error}).Inc()
-				log.Printf("[ERROR] : %v CloudWatchLogs - %v\n", c.OutputType, err.Error())
+				log.Error("CloudWatchLogs ", "output", c.OutputType, "err", err.Error())
 				return
 			}
 		}
@@ -247,11 +247,11 @@ func (c *Client) SendCloudWatchLog(falcopayload types.FalcoPayload) {
 		go c.CountMetric("outputs", 1, []string{"output:awscloudwatchlogs", "status:error"})
 		c.Stats.AWSCloudWatchLogs.Add(Error, 1)
 		c.PromStats.Outputs.With(map[string]string{"destination": "awscloudwatchlogs", "status": Error}).Inc()
-		log.Printf("[ERROR] : %v CloudWatchLogs - %v\n", c.OutputType, err.Error())
+		log.Error("CloudWatchLogs ", "output", c.OutputType, "err", err.Error())
 		return
 	}
 
-	log.Printf("[INFO]  : %v CloudWatchLogs - Send Log OK (%v)\n", c.OutputType, resp.String())
+	log.Info("CloudWatchLogs - Send Log OK", "output", c.OutputType, "message", resp.String())
 	go c.CountMetric("outputs", 1, []string{"output:awscloudwatchlogs", "status:ok"})
 	c.Stats.AWSCloudWatchLogs.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "awscloudwatchlogs", "status": OK}).Inc()
@@ -262,7 +262,7 @@ func (c *Client) putLogEvents(svc *cloudwatchlogs.CloudWatchLogs, input *cloudwa
 	resp, err := svc.PutLogEvents(input)
 	if err != nil {
 		if exception, ok := err.(*cloudwatchlogs.InvalidSequenceTokenException); ok {
-			log.Printf("[INFO]  : %v Refreshing token for LogGroup: %s LogStream: %s", c.OutputType, *input.LogGroupName, *input.LogStreamName)
+			log.Info("Refreshing token for LogGroup", "output", c.OutputType, "loggroup", *input.LogGroupName, "logStream", *input.LogStreamName)
 			input.SequenceToken = exception.ExpectedSequenceToken
 
 			return c.putLogEvents(svc, input)

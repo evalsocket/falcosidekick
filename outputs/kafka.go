@@ -3,7 +3,7 @@ package outputs
 import (
 	"context"
 	"encoding/json"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
@@ -16,7 +16,7 @@ import (
 func NewKafkaClient(config *types.Configuration, stats *types.Statistics, promStats *types.PromStatistics, statsdClient, dogstatsdClient *statsd.Client) (*Client, error) {
 	conn, err := kafka.DialLeader(context.Background(), "tcp", config.Kafka.HostPort, config.Kafka.Topic, config.Kafka.Partition)
 	if err != nil {
-		log.Printf("[ERROR] : Kafka - %v - %v\n", "failed to connect to Apache Kafka server", err.Error())
+		log.Info("[ERROR] : Kafka - %v - %v\n", "failed to connect to Apache Kafka server", err.Error())
 		return nil, err
 	}
 
@@ -38,7 +38,7 @@ func (c *Client) KafkaProduce(falcopayload types.FalcoPayload) {
 	falcoMsg, err := json.Marshal(falcopayload)
 	if err != nil {
 		c.setKafkaErrorMetrics()
-		log.Printf("[ERROR] : Kafka - %v - %v\n", "failed to marshalling message", err.Error())
+		log.Info("[ERROR] : Kafka - %v - %v\n", "failed to marshalling message", err.Error())
 		return
 	}
 
@@ -48,20 +48,20 @@ func (c *Client) KafkaProduce(falcopayload types.FalcoPayload) {
 
 	if err := c.KafkaProducer.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
 		c.setKafkaErrorMetrics()
-		log.Printf("[ERROR] : Kafka - %v\n", err)
+		log.Info("[ERROR] : Kafka - %v\n", err)
 		return
 	}
 	_, err = c.KafkaProducer.WriteMessages(kafkaMsg)
 	if err != nil {
 		c.setKafkaErrorMetrics()
-		log.Printf("[ERROR] : Kafka - %v\n", err)
+		log.Info("[ERROR] : Kafka - %v\n", err)
 		return
 	}
 
 	go c.CountMetric("outputs", 1, []string{"output:kafka", "status:ok"})
 	c.Stats.Kafka.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "kafka", "status": OK}).Inc()
-	log.Printf("[INFO] : Kafka - Publish OK\n")
+	log.Info("[INFO] : Kafka - Publish OK\n")
 }
 
 // setKafkaErrorMetrics set the error stats

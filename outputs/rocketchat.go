@@ -3,7 +3,7 @@ package outputs
 import (
 	"bytes"
 	"github.com/falcosecurity/falcosidekick/types"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 func newRocketchatPayload(falcopayload types.FalcoPayload, config *types.Configuration) slackPayload {
@@ -56,7 +56,7 @@ func newRocketchatPayload(falcopayload types.FalcoPayload, config *types.Configu
 	if config.Rocketchat.MessageFormatTemplate != nil {
 		buf := &bytes.Buffer{}
 		if err := config.Rocketchat.MessageFormatTemplate.Execute(buf, falcopayload); err != nil {
-			log.Printf("[ERROR] : RocketChat - Error expanding RocketChat message %v", err)
+			log.Info("[ERROR] : RocketChat - Error expanding RocketChat message %v", err)
 		} else {
 			messageText = buf.String()
 		}
@@ -110,7 +110,7 @@ func (c *Client) RocketchatPost(falcopayload types.FalcoPayload) {
 		go c.CountMetric(Outputs, 1, []string{"output:rocketchat", "status:error"})
 		c.Stats.Rocketchat.Add(Error, 1)
 		c.PromStats.Outputs.With(map[string]string{"destination": "rocketchat", "status": Error}).Inc()
-		log.Printf("[ERROR] : RocketChat - %v\n", err.Error())
+		log.Info("[ERROR] : RocketChat - %v\n", err.Error())
 		return
 	}
 
@@ -118,5 +118,5 @@ func (c *Client) RocketchatPost(falcopayload types.FalcoPayload) {
 	go c.CountMetric(Outputs, 1, []string{"output:rocketchat", "status:ok"})
 	c.Stats.Rocketchat.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "rocketchat", "status": OK}).Inc()
-	log.Printf("[INFO] : RocketChat - Publish OK\n")
+	log.Info("[INFO] : RocketChat - Publish OK\n")
 }

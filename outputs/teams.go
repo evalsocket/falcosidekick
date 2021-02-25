@@ -2,7 +2,7 @@ package outputs
 
 import (
 	"github.com/falcosecurity/falcosidekick/types"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 type teamsFact struct {
@@ -109,7 +109,7 @@ func (c *Client) TeamsPost(falcopayload types.FalcoPayload) {
 		go c.CountMetric(Outputs, 1, []string{"output:teams", "status:error"})
 		c.Stats.Teams.Add(Error, 1)
 		c.PromStats.Outputs.With(map[string]string{"destination": "teams", "status": Error}).Inc()
-		log.Printf("[ERROR] : Teams - %v\n", err)
+		log.Info("[ERROR] : Teams - %v\n", err)
 		return
 	}
 
@@ -117,5 +117,5 @@ func (c *Client) TeamsPost(falcopayload types.FalcoPayload) {
 	go c.CountMetric(Outputs, 1, []string{"output:teams", "status:ok"})
 	c.Stats.Teams.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "teams", "status": OK}).Inc()
-	log.Printf("[INFO] : Teams - Publish OK\n")
+	log.Info("[INFO] : Teams - Publish OK\n")
 }

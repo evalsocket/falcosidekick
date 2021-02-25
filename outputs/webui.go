@@ -3,7 +3,7 @@ package outputs
 import (
 	"encoding/json"
 	"expvar"
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/falcosecurity/falcosidekick/types"
 )
@@ -19,7 +19,7 @@ func newWebUIPayload(falcopayload types.FalcoPayload, config *types.Configuratio
 	s := new(map[string]int64)
 
 	if err := json.Unmarshal([]byte(expvar.Get("falco.priority").String()), &s); err != nil {
-		log.Printf("[ERROR] : WebUI - failed to unmarshal expvar : %s", err)
+		log.Info("[ERROR] : WebUI - failed to unmarshal expvar : %s", err)
 	}
 
 	return WebUIPayload{
@@ -39,7 +39,7 @@ func (c *Client) WebUIPost(falcopayload types.FalcoPayload) {
 		go c.CountMetric(Outputs, 1, []string{"output:webui", "status:error"})
 		c.Stats.WebUI.Add(Error, 1)
 		c.PromStats.Outputs.With(map[string]string{"destination": "webui", "status": Error}).Inc()
-		log.Printf("[ERROR] : WebUI - %v\n", err.Error())
+		log.Info("[ERROR] : WebUI - %v\n", err.Error())
 		return
 	}
 
@@ -47,5 +47,5 @@ func (c *Client) WebUIPost(falcopayload types.FalcoPayload) {
 	go c.CountMetric(Outputs, 1, []string{"output:webui", "status:ok"})
 	c.Stats.WebUI.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "webui", "status": OK}).Inc()
-	log.Printf("[INFO]  : WebUI - Publish OK\n")
+	log.Info("[INFO]  : WebUI - Publish OK\n")
 }

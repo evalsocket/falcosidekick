@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
 	"time"
@@ -110,7 +110,7 @@ func newFalcoPayload(payload io.Reader) (types.FalcoPayload, error) {
 
 	if config.Debug == true {
 		body, _ := json.Marshal(falcopayload)
-		log.Printf("[DEBUG] : Falco's payload : %v", string(body))
+		log.Debug("Falco's payload ", "payload", string(body))
 	}
 
 	return falcopayload, nil

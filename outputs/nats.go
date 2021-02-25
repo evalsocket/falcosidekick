@@ -2,7 +2,7 @@ package outputs
 
 import (
 	"encoding/json"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
 
@@ -19,7 +19,7 @@ func (c *Client) NatsPublish(falcopayload types.FalcoPayload) {
 	nc, err := nats.Connect(c.EndpointURL.String())
 	if err != nil {
 		c.setNatsErrorMetrics()
-		log.Printf("[ERROR] : NATS - %v\n", err)
+		log.Info("[ERROR] : NATS - %v\n", err)
 		return
 	}
 	defer nc.Flush()
@@ -29,21 +29,21 @@ func (c *Client) NatsPublish(falcopayload types.FalcoPayload) {
 	j, err := json.Marshal(falcopayload)
 	if err != nil {
 		c.setStanErrorMetrics()
-		log.Printf("[ERROR] : STAN - %v\n", err.Error())
+		log.Info("[ERROR] : STAN - %v\n", err.Error())
 		return
 	}
 
 	err = nc.Publish("falco."+strings.ToLower(falcopayload.Priority.String())+"."+r, j)
 	if err != nil {
 		c.setNatsErrorMetrics()
-		log.Printf("[ERROR] : NATS - %v\n", err)
+		log.Info("[ERROR] : NATS - %v\n", err)
 		return
 	}
 
 	go c.CountMetric("outputs", 1, []string{"output:nats", "status:ok"})
 	c.Stats.Nats.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "nats", "status": OK}).Inc()
-	log.Printf("[INFO]  : NATS - Publish OK\n")
+	log.Info("[INFO]  : NATS - Publish OK\n")
 }
 
 // setNatsErrorMetrics set the error stats

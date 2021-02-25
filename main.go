@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
 
@@ -343,7 +343,7 @@ func init() {
 		var err error
 		kubelessClient, err = outputs.NewKubelessClient(config, stats, promStats, statsdClient, dogstatsdClient)
 		if err != nil {
-			log.Printf("[ERROR] : Kubeless - %v\n", err)
+			log.Error("Kubeless ", "err", err)
 			config.Kubeless.Namespace = ""
 			config.Kubeless.Function = ""
 		} else {
@@ -361,7 +361,7 @@ func init() {
 		}
 	}
 
-	log.Printf("[INFO]  : Enabled Outputs : %s\n", outputs.EnabledOutputs)
+	log.Info("Enabled Outputs", "output", outputs.EnabledOutputs)
 }
 
 func main() {
@@ -371,12 +371,12 @@ func main() {
 	http.HandleFunc("/test", testHandler)
 	http.Handle("/metrics", promhttp.Handler())
 
-	log.Printf("[INFO]  : Falco Sidekick is up and listening on %s:%d", config.ListenAddress, config.ListenPort)
+	log.Info("Falco Sidekick is up and listening on", "address", config.ListenAddress, "port",config.ListenPort)
 	if config.Debug {
-		log.Printf("[INFO]  : Debug mode : %v", config.Debug)
+		log.Debug("Debug mode", "debug", config.Debug)
 	}
 
 	if err := http.ListenAndServe(fmt.Sprintf("%s:%d", config.ListenAddress, config.ListenPort), nil); err != nil {
-		log.Fatalf("[ERROR] : %v", err.Error())
+		log.Fatal("Failed to start server", "err", err.Error())
 	}
 }

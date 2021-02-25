@@ -2,7 +2,7 @@ package outputs
 
 import (
 	"bytes"
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/falcosecurity/falcosidekick/types"
 )
@@ -62,7 +62,7 @@ func newMattermostPayload(falcopayload types.FalcoPayload, config *types.Configu
 	if config.Mattermost.MessageFormatTemplate != nil {
 		buf := &bytes.Buffer{}
 		if err := config.Mattermost.MessageFormatTemplate.Execute(buf, falcopayload); err != nil {
-			log.Printf("[ERROR] : Mattermost - Error expanding Mattermost message %v", err)
+			log.Info("[ERROR] : Mattermost - Error expanding Mattermost message %v", err)
 		} else {
 			messageText = buf.String()
 		}
@@ -115,7 +115,7 @@ func (c *Client) MattermostPost(falcopayload types.FalcoPayload) {
 		go c.CountMetric(Outputs, 1, []string{"output:mattermost", "status:error"})
 		c.Stats.Mattermost.Add(Error, 1)
 		c.PromStats.Outputs.With(map[string]string{"destination": "mattermost", "status": Error}).Inc()
-		log.Printf("[ERROR] : Mattermost - %v\n", err)
+		log.Info("[ERROR] : Mattermost - %v\n", err)
 		return
 	}
 
@@ -123,5 +123,5 @@ func (c *Client) MattermostPost(falcopayload types.FalcoPayload) {
 	go c.CountMetric(Outputs, 1, []string{"output:mattermost", "status:ok"})
 	c.Stats.Mattermost.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "mattermost", "status": OK}).Inc()
-	log.Printf("[INFO] : Mattermost - Publish OK\n")
+	log.Info("[INFO] : Mattermost - Publish OK\n")
 }

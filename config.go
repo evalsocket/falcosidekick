@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net"
 	"os"
 	"path"
@@ -163,7 +163,7 @@ func getConfig() *types.Configuration {
 	v.GetStringMapString("Webhook.CustomHeaders")
 	v.GetStringMapString("CloudEvents.Extensions")
 	if err := v.Unmarshal(c); err != nil {
-		log.Printf("[ERROR] : Error unmarshalling config : %s", err)
+		log.Errror("Error unmarshalling config", "err", err)
 	}
 
 	if value, present := os.LookupEnv("CUSTOMFIELDS"); present {
@@ -197,11 +197,11 @@ func getConfig() *types.Configuration {
 	}
 
 	if c.ListenPort == 0 || c.ListenPort > 65536 {
-		log.Fatalf("[ERROR] : Bad port number\n")
+		log.Fatal("Bad port number\n")
 	}
 
 	if ip := net.ParseIP(c.ListenAddress); c.ListenAddress != "" && ip == nil {
-		log.Fatalf("[ERROR] : Failed to parse ListenAddress")
+		log.Fatal("Failed to parse ListenAddress")
 	}
 
 	c.Slack.MinimumPriority = checkPriority(c.Slack.MinimumPriority)
@@ -250,7 +250,7 @@ func getMessageFormatTemplate(output, temp string) *template.Template {
 		var err error
 		t, err := template.New(output).Parse(temp)
 		if err != nil {
-			log.Fatalf("[ERROR] : Error compiling %v message template : %v\n", output, err)
+			log.Fatal("Error compiling message template\n","output", output,"err", err)
 		}
 		return t
 	}

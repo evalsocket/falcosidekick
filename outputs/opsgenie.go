@@ -2,7 +2,7 @@ package outputs
 
 import (
 	"github.com/falcosecurity/falcosidekick/types"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 type opsgeniePayload struct {
@@ -56,7 +56,7 @@ func (c *Client) OpsgeniePost(falcopayload types.FalcoPayload) {
 		go c.CountMetric(Outputs, 1, []string{"output:opsgenie", "status:error"})
 		c.Stats.Opsgenie.Add(Error, 1)
 		c.PromStats.Outputs.With(map[string]string{"destination": "opsgenie", "status": Error}).Inc()
-		log.Printf("[ERROR] : OpsGenie - %v\n", err)
+		log.Info("[ERROR] : OpsGenie - %v\n", err)
 		return
 	}
 
@@ -64,5 +64,5 @@ func (c *Client) OpsgeniePost(falcopayload types.FalcoPayload) {
 	go c.CountMetric(Outputs, 1, []string{"output:opsgenie", "status:ok"})
 	c.Stats.Opsgenie.Add("ok", 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "opsgenie", "status": OK}).Inc()
-	log.Printf("[INFO] : OpsGenie - Publish OK\n")
+	log.Info("[INFO] : OpsGenie - Publish OK\n")
 }

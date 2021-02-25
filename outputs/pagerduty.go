@@ -2,7 +2,7 @@ package outputs
 
 import (
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/PagerDuty/go-pagerduty"
@@ -63,12 +63,12 @@ func (c *Client) PagerdutyCreateIncident(falcopayload types.FalcoPayload) {
 		go c.CountMetric(Outputs, 1, []string{"output:pagerduty", "status:error"})
 		c.Stats.Pagerduty.Add(Error, 1)
 		c.PromStats.Outputs.With(map[string]string{"destination": "pagerduty", "status": Error}).Inc()
-		log.Printf("[ERROR] : PagerDuty - %v\n", err)
+		log.Info("[ERROR] : PagerDuty - %v\n", err)
 		return
 	}
 
 	go c.CountMetric(Outputs, 1, []string{"output:pagerduty", "status:ok"})
 	c.Stats.Pagerduty.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "pagerduty", "status": OK}).Inc()
-	log.Printf("[INFO] : Pagerduty - Create Incident OK\n")
+	log.Info("[INFO] : Pagerduty - Create Incident OK\n")
 }

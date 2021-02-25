@@ -2,7 +2,7 @@ package outputs
 
 import (
 	"encoding/json"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"strings"
 
 	"github.com/falcosecurity/falcosidekick/types"
@@ -16,7 +16,7 @@ func (c *Client) StanPublish(falcopayload types.FalcoPayload) {
 	nc, err := stan.Connect(c.Config.Stan.ClusterID, c.Config.Stan.ClientID, stan.NatsURL(c.EndpointURL.String()))
 	if err != nil {
 		c.setStanErrorMetrics()
-		log.Printf("[ERROR] : STAN - %v\n", err.Error())
+		log.Info("[ERROR] : STAN - %v\n", err.Error())
 		return
 	}
 	defer nc.Close()
@@ -25,14 +25,14 @@ func (c *Client) StanPublish(falcopayload types.FalcoPayload) {
 	j, err := json.Marshal(falcopayload)
 	if err != nil {
 		c.setStanErrorMetrics()
-		log.Printf("[ERROR] : STAN - %v\n", err.Error())
+		log.Info("[ERROR] : STAN - %v\n", err.Error())
 		return
 	}
 
 	err = nc.Publish("falco."+strings.ToLower(falcopayload.Priority.String())+"."+r, j)
 	if err != nil {
 		c.setStanErrorMetrics()
-		log.Printf("[ERROR] : STAN - %v\n", err)
+		log.Info("[ERROR] : STAN - %v\n", err)
 		return
 	}
 
@@ -40,7 +40,7 @@ func (c *Client) StanPublish(falcopayload types.FalcoPayload) {
 	go c.CountMetric(Outputs, 1, []string{"output:stan", "status:ok"})
 	c.Stats.Stan.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "stan", "status": OK}).Inc()
-	log.Printf("[INFO] : STAN - Publish OK\n")
+	log.Info("[INFO] : STAN - Publish OK\n")
 }
 
 // setStanErrorMetrics set the error stats

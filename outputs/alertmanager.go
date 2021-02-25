@@ -2,7 +2,7 @@ package outputs
 
 import (
 	"encoding/json"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 
@@ -95,12 +95,12 @@ func (c *Client) AlertmanagerPost(falcopayload types.FalcoPayload) {
 		go c.CountMetric(Outputs, 1, []string{"output:alertmanager", "status:error"})
 		c.Stats.Alertmanager.Add(Error, 1)
 		c.PromStats.Outputs.With(map[string]string{"destination": "alertmanager", "status": Error}).Inc()
-		log.Printf("[ERROR] : AlertManager - %v\n", err)
+		log.Error("AlertManager ", "err", err)
 		return
 	}
 
 	go c.CountMetric(Outputs, 1, []string{"output:alertmanager", "status:ok"})
 	c.Stats.Alertmanager.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "alertmanager", "status": OK}).Inc()
-	log.Printf("[INFO]  : AlertManager - Publish OK\n")
+	log.Info("AlertManager - Publish OK\n")
 }

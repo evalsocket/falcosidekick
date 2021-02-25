@@ -2,7 +2,7 @@ package outputs
 
 import (
 	"github.com/falcosecurity/falcosidekick/types"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -59,12 +59,12 @@ func (c *Client) DatadogPost(falcopayload types.FalcoPayload) {
 		go c.CountMetric(Outputs, 1, []string{"output:datadog", "status:error"})
 		c.Stats.Datadog.Add(Error, 1)
 		c.PromStats.Outputs.With(map[string]string{"destination": "datadog", "status": Error}).Inc()
-		log.Printf("[ERROR] : Datadog - %v\n", err)
+		log.Info("[ERROR] : Datadog - %v\n", err)
 		return
 	}
 
 	go c.CountMetric(Outputs, 1, []string{"output:datadog", "status:ok"})
 	c.Stats.Datadog.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "datadog", "status": OK}).Inc()
-	log.Printf("[INFO] : Datadog - Publish OK\n")
+	log.Info("[INFO] : Datadog - Publish OK\n")
 }

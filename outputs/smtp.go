@@ -2,8 +2,8 @@ package outputs
 
 import (
 	"bytes"
+	log "github.com/sirupsen/logrus"
 	htmlTemplate "html/template"
-	"log"
 	"regexp"
 	"strings"
 	textTemplate "text/template"
@@ -26,7 +26,7 @@ type SMTPPayload struct {
 func NewSMTPClient(config *types.Configuration, stats *types.Statistics, promStats *types.PromStatistics, statsdClient, dogstatsdClient *statsd.Client) (*Client, error) {
 	reg := regexp.MustCompile(`.*:[0-9]+`)
 	if !reg.MatchString(config.SMTP.HostPort) {
-		log.Printf("[ERROR] : SMTP - Bad Host:Port\n")
+		log.Info("[ERROR] : SMTP - Bad Host:Port\n")
 		return nil, ErrClientCreation
 	}
 
@@ -59,7 +59,7 @@ func newSMTPPayload(falcopayload types.FalcoPayload, config *types.Configuration
 	var outtext bytes.Buffer
 	err := ttmpl.Execute(&outtext, falcopayload)
 	if err != nil {
-		log.Printf("[ERROR] : SMTP - %v\n", err)
+		log.Info("[ERROR] : SMTP - %v\n", err)
 		return s
 	}
 	s.Body += outtext.String()
@@ -75,7 +75,7 @@ func newSMTPPayload(falcopayload types.FalcoPayload, config *types.Configuration
 	var outhtml bytes.Buffer
 	err = htmpl.Execute(&outhtml, falcopayload)
 	if err != nil {
-		log.Printf("[ERROR] : SMTP - %v\n", err)
+		log.Info("[ERROR] : SMTP - %v\n", err)
 		return s
 	}
 	s.Body += outhtml.String()
@@ -92,7 +92,7 @@ func (c *Client) SendMail(falcopayload types.FalcoPayload) {
 	body := sp.To + "\n" + sp.Subject + "\n" + sp.Body
 
 	if c.Config.Debug == true {
-		log.Printf("[DEBUG] : SMTP payload : \nServer: %v\nFrom: %v\nTo: %v\nSubject: %v\n", c.Config.SMTP.HostPort, c.Config.SMTP.From, sp.To, sp.Subject)
+		log.Info("[DEBUG] : SMTP payload : \nServer: %v\nFrom: %v\nTo: %v\nSubject: %v\n", c.Config.SMTP.HostPort, c.Config.SMTP.From, sp.To, sp.Subject)
 	}
 
 	c.Stats.SMTP.Add("total", 1)
@@ -100,11 +100,11 @@ func (c *Client) SendMail(falcopayload types.FalcoPayload) {
 	if err != nil {
 		go c.CountMetric("outputs", 1, []string{"output:smtp", "status:error"})
 		c.Stats.SMTP.Add(Error, 1)
-		log.Printf("[ERROR] : SMTP - %v\n", err)
+		log.Info("[ERROR] : SMTP - %v\n", err)
 		return
 	}
 
-	log.Printf("[INFO]  : SMTP - Sent OK\n")
+	log.Info("[INFO]  : SMTP - Sent OK\n")
 	go c.CountMetric("outputs", 1, []string{"output:smtp", "status:ok"})
 	c.Stats.SMTP.Add(OK, 1)
 }

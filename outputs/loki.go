@@ -1,7 +1,7 @@
 package outputs
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"strings"
 	"time"
 
@@ -53,12 +53,12 @@ func (c *Client) LokiPost(falcopayload types.FalcoPayload) {
 		go c.CountMetric(Outputs, 1, []string{"output:loki", "status:error"})
 		c.Stats.Loki.Add(Error, 1)
 		c.PromStats.Outputs.With(map[string]string{"destination": "loki", "status": Error}).Inc()
-		log.Printf("[ERROR] : Loki - %v\n", err)
+		log.Info("[ERROR] : Loki - %v\n", err)
 		return
 	}
 
 	go c.CountMetric(Outputs, 1, []string{"output:loki", "status:ok"})
 	c.Stats.Loki.Add(OK, 1)
 	c.PromStats.Outputs.With(map[string]string{"destination": "loki", "status": OK}).Inc()
-	log.Printf("[INFO] : Loki - Publish OK\n")
+	log.Info("[INFO] : Loki - Publish OK\n")
 }

@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -70,16 +70,16 @@ type Client struct {
 func NewClient(outputType string, defaultEndpointURL string, config *types.Configuration, stats *types.Statistics, promStats *types.PromStatistics, statsdClient, dogstatsdClient *statsd.Client) (*Client, error) {
 	reg := regexp.MustCompile(`(http|nats)(s?)://.*`)
 	if !reg.MatchString(defaultEndpointURL) {
-		log.Printf("[ERROR] : %v - %v\n", outputType, "Bad Endpoint")
+		log.Info("[ERROR] : %v - %v\n", outputType, "Bad Endpoint")
 		return nil, ErrClientCreation
 	}
 	if _, err := url.ParseRequestURI(defaultEndpointURL); err != nil {
-		log.Printf("[ERROR] : %v - %v\n", outputType, err.Error())
+		log.Info("[ERROR] : %v - %v\n", outputType, err.Error())
 		return nil, ErrClientCreation
 	}
 	endpointURL, err := url.Parse(defaultEndpointURL)
 	if err != nil {
-		log.Printf("[ERROR] : %v - %v\n", outputType, err.Error())
+		log.Info("[ERROR] : %v - %v\n", outputType, err.Error())
 		return nil, ErrClientCreation
 	}
 	return &Client{OutputType: outputType, EndpointURL: endpointURL, Config: config, Stats: stats, PromStats: promStats, StatsdClient: statsdClient, DogstatsdClient: dogstatsdClient}, nil
@@ -99,12 +99,12 @@ func (c *Client) Post(payload interface{}) error {
 		fmt.Fprintf(body, "%v", payload)
 	default:
 		if err := json.NewEncoder(body).Encode(payload); err != nil {
-			log.Printf("[ERROR] : %v - %s", c.OutputType, err)
+			log.Info("[ERROR] : %v - %s", c.OutputType, err)
 		}
 	}
 
 	if c.Config.Debug == true {
-		log.Printf("[DEBUG] : %v payload : %v\n", c.OutputType, body)
+		log.Info("[DEBUG] : %v payload : %v\n", c.OutputType, body)
 	}
 
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
@@ -122,7 +122,7 @@ func (c *Client) Post(payload interface{}) error {
 
 	req, err := http.NewRequest("POST", c.EndpointURL.String(), body)
 	if err != nil {
-		log.Printf("[ERROR] : %v - %v\n", c.OutputType, err.Error())
+		log.Info("[ERROR] : %v - %v\n", c.OutputType, err.Error())
 	}
 	contentType := "application/json; charset=utf-8"
 	if c.OutputType == "Loki" || c.OutputType == Kubeless {
@@ -150,7 +150,7 @@ func (c *Client) Post(payload interface{}) error {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("[ERROR] : %v - %v\n", c.OutputType, err.Error())
+		log.Info("[ERROR] : %v - %v\n", c.OutputType, err.Error())
 		go c.CountMetric("outputs", 1, []string{"output:" + strings.ToLower(c.OutputType), "status:connectionrefused"})
 		return err
 	}
@@ -160,32 +160,32 @@ func (c *Client) Post(payload interface{}) error {
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusAccepted, http.StatusNoContent: //200, 201, 202, 204
-		log.Printf("[INFO]  : %v - Post OK (%v)\n", c.OutputType, resp.StatusCode)
+		log.Info("[INFO]  : %v - Post OK (%v)\n", c.OutputType, resp.StatusCode)
 		if c.OutputType == Kubeless {
 			body, _ := ioutil.ReadAll(resp.Body)
-			log.Printf("[INFO]  : Kubeless - Function Response : %v\n", string(body))
+			log.Info("[INFO]  : Kubeless - Function Response : %v\n", string(body))
 		}
 		return nil
 	case http.StatusBadRequest: //400
-		log.Printf("[ERROR] : %v - %v (%v)\n", c.OutputType, ErrHeaderMissing, resp.StatusCode)
+		log.Info("[ERROR] : %v - %v (%v)\n", c.OutputType, ErrHeaderMissing, resp.StatusCode)
 		return ErrHeaderMissing
 	case http.StatusUnauthorized: //401
-		log.Printf("[ERROR] : %v - %v (%v)\n", c.OutputType, ErrClientAuthenticationError, resp.StatusCode)
+		log.Info("[ERROR] : %v - %v (%v)\n", c.OutputType, ErrClientAuthenticationError, resp.StatusCode)
 		return ErrClientAuthenticationError
 	case http.StatusForbidden: //403
-		log.Printf("[ERROR] : %v - %v (%v)\n", c.OutputType, ErrForbidden, resp.StatusCode)
+		log.Info("[ERROR] : %v - %v (%v)\n", c.OutputType, ErrForbidden, resp.StatusCode)
 		return ErrForbidden
 	case http.StatusNotFound: //404
-		log.Printf("[ERROR] : %v - %v (%v)\n", c.OutputType, ErrNotFound, resp.StatusCode)
+		log.Info("[ERROR] : %v - %v (%v)\n", c.OutputType, ErrNotFound, resp.StatusCode)
 		return ErrNotFound
 	case http.StatusUnprocessableEntity: //422
-		log.Printf("[ERROR] : %v - %v (%v)\n", c.OutputType, ErrUnprocessableEntityError, resp.StatusCode)
+		log.Info("[ERROR] : %v - %v (%v)\n", c.OutputType, ErrUnprocessableEntityError, resp.StatusCode)
 		return ErrUnprocessableEntityError
 	case http.StatusTooManyRequests: //429
-		log.Printf("[ERROR] : %v - %v (%v)\n", c.OutputType, ErrTooManyRequest, resp.StatusCode)
+		log.Info("[ERROR] : %v - %v (%v)\n", c.OutputType, ErrTooManyRequest, resp.StatusCode)
 		return ErrTooManyRequest
 	default:
-		log.Printf("[ERROR] : %v - Unexpected Response  (%v)\n", c.OutputType, resp.StatusCode)
+		log.Info("[ERROR] : %v - Unexpected Response  (%v)\n", c.OutputType, resp.StatusCode)
 		return errors.New(resp.Status)
 	}
 }
