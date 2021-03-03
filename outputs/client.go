@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/storage"
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -60,6 +61,7 @@ type Client struct {
 	StatsdClient      *statsd.Client
 	DogstatsdClient   *statsd.Client
 	GCPTopicClient    *pubsub.Topic
+	GCSStorageClient  *storage.BucketHandle
 	KafkaProducer     *kafka.Conn
 	PagerdutyClient   *pagerduty.Client
 	CloudEventsClient cloudevents.Client

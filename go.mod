@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	cloud.google.com/go/pubsub v1.9.1
+	cloud.google.com/go/storage v1.14.0 // indirect
 	github.com/Azure/azure-event-hubs-go/v3 v3.3.4
 	github.com/DataDog/datadog-go v4.2.0+incompatible
 	github.com/PagerDuty/go-pagerduty v1.3.0
@@ -20,8 +21,8 @@ require (
 	github.com/segmentio/kafka-go v0.4.8
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
-	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
-	google.golang.org/api v0.36.0
+	golang.org/x/oauth2 v0.0.0-20210218202405-ba52d332ba99
+	google.golang.org/api v0.40.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	k8s.io/client-go v0.20.1
 )
