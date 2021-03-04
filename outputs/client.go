@@ -61,7 +61,7 @@ type Client struct {
 	StatsdClient      *statsd.Client
 	DogstatsdClient   *statsd.Client
 	GCPTopicClient    *pubsub.Topic
-	GCSStorageClient  *storage.BucketHandle
+	GCSStorageClient  *storage.Client
 	KafkaProducer     *kafka.Conn
 	PagerdutyClient   *pagerduty.Client
 	CloudEventsClient cloudevents.Client
