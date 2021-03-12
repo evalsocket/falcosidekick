@@ -10,10 +10,10 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/falcosecurity/falcosidekick/types"
-
 	"github.com/spf13/viper"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+
+	"github.com/falcosecurity/falcosidekick/types"
 )
 
 func getConfig() *types.Configuration {
@@ -115,7 +115,6 @@ func getConfig() *types.Configuration {
 	v.SetDefault("Dogstatsd.Forwarder", "")
 	v.SetDefault("Dogstatsd.Namespace", "falcosidekick.")
 	v.SetDefault("Dogstatsd.Tags", []string{})
-	v.SetDefault("Customfields", map[string]string{})
 	v.SetDefault("Webhook.Address", "")
 	v.SetDefault("Webhook.MinimumPriority", "")
 	v.SetDefault("CloudEvents.Address", "")
@@ -138,10 +137,7 @@ func getConfig() *types.Configuration {
 	v.SetDefault("Kafka.Topic", "")
 	v.SetDefault("Kafka.Partition", 0)
 	v.SetDefault("Kafka.MinimumPriority", "")
-	v.SetDefault("Pagerduty.APIKey", "")
-	v.SetDefault("Pagerduty.Service", "")
-	v.SetDefault("Pagerduty.Assignee", []string{})
-	v.SetDefault("Pagerduty.EscalationPolicy", "")
+	v.SetDefault("Pagerduty.RoutingKey", "")
 	v.SetDefault("Pagerduty.MinimumPriority", "")
 	v.SetDefault("Kubeless.Namespace", "")
 	v.SetDefault("Kubeless.Function", "")

@@ -296,11 +296,8 @@ kafka:
   # minimumpriority: "debug" # minimum priority of event for using this output, order is emergency|alert|critical|error|warning|notice|informational|debug or "" (default)
 
 pagerduty:
-  # apikey: # Pagerduty API Key, if not empty, Pagerduty output is enabled
-  service: "" # Service to create an incident (mandatory)
-  assignee: "" # A list of comma separated users to assign. Cannot be provided if pagerduty.escalationpolicy is already specified.
-  escalationpolicy: "" # Escalation policy to assign. Cannot be provided if pagerduty.escalationpolicy is already specified
-  # minimumpriority: "debug" # minimum priority of event for using this output, order is emergency|alert|critical|error|warning|notice|informational|debug or "" (default)
+  routingKey: "" # Pagerduty Routing Key, if not empty, Pagerduty output is enabled
+  minimumpriority: "" # minimum priority of event for using this output, order is emergency|alert|critical|error|warning|notice|informational|debug or "" (default)
 
 kubeless:
   function: "" # Name of Kubeless function, if not empty, Kubeless is enabled
@@ -523,7 +520,7 @@ care of lower/uppercases**) : `yaml: a.b --> envvar: A_B` :
 - **GCP_PUBSUB_TOPIC**: The name of the Pub/Sub topic
 - **GCP_PUBSUB_MINIMUMPRIORITY**: minimum priority of event for using this
   output, order is
-- **GCP_STORAGE_BUCKET**: # The name of the bucket
+- **GCP_STORAGE_BUCKET**: # The name of the gcp bucket
 - **GCP_STORAGE_PREFIX**: name of prefix, keys will have format: gs://<bucket>/<prefix>/YYYY-MM-DD/YYYY-MM-DDTHH:mm:ss.s+01:00.json
 - **GCP_STORAGE_MINIMUMPRIORITY**: minimum priority of event for using this
   output, order is
