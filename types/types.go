@@ -51,6 +51,7 @@ type Configuration struct {
 	Pagerduty     PagerdutyConfig
 	Kubeless      kubelessConfig
 	WebUI         WebUIOutputConfig
+	Rabbitmq      RabbitmqConfig
 }
 
 // SlackOutputConfig represents parameters for Slack
@@ -279,6 +280,13 @@ type WebUIOutputConfig struct {
 	URL string
 }
 
+// RabbitmqConfig represents parameters for rabbitmq
+type RabbitmqConfig struct {
+	URL string
+	Queue string
+	MinimumPriority string
+}
+
 // Statistics is a struct to store stastics
 type Statistics struct {
 	Requests          *expvar.Map
@@ -315,6 +323,7 @@ type Statistics struct {
 	CloudEvents       *expvar.Map
 	Kubeless          *expvar.Map
 	WebUI             *expvar.Map
+	Rabbitmq     	  *expvar.Map
 }
 
 // PromStatistics is a struct to store prometheus metrics

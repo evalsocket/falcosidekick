@@ -52,6 +52,7 @@ func getInitStats() *types.Statistics {
 		Pagerduty:         getOutputNewMap("pagerduty"),
 		Kubeless:          getOutputNewMap("kubeless"),
 		WebUI:             getOutputNewMap("webui"),
+		Rabbitmq:          getOutputNewMap("rabbitmq"),
 	}
 	stats.Falco.Add(outputs.Emergency, 0)
 	stats.Falco.Add(outputs.Alert, 0)
